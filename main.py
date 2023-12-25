@@ -8,13 +8,13 @@ import pandas as pd
 print(os.listdir())
 
 # load model
-car_detector = YOLO("./model/yolov8n.pt")
-plate_detector = YOLO("./model/license_plate_detector.pt")
+car_detector = YOLO("model/yolov8n.pt")
+plate_detector = YOLO("model/license_plate_detector.pt")
 
 vehicle_tracker = Tracker()
 
-# load video 
-cap = cv2.VideoCapture("./sample1.mp4")
+# load video 1 frame per 2 seconds
+cap = cv2.VideoCapture("./sample.mp4")
 
 # using YOLO we have to define the classes we want to detect
 # here, firstly, we have to detect cars, trucks or buses
@@ -22,13 +22,16 @@ cap = cv2.VideoCapture("./sample1.mp4")
 vehicle = [2, 5, 7]    
 count = 0
 
-# read video frame by frame
+# read video 1 frame per second
+
 frame_nmr = -1
 ret = True
 while ret:
     if not ret:
         break
     frame_nmr += 1
+    if frame_nmr % 50 == 0:
+        continue
     ret, frame = cap.read()
     detections = car_detector.predict(frame)
     a = detections[0].boxes.data
@@ -77,7 +80,11 @@ while ret:
             y2 = int(detection[3])
             cv2.rectangle(roi, (x1, y1), (x2, y2), (0, 0, 255), 2)
             cv2.putText(roi, str(class_id), (x1, y1), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 1)
-        
+            # cut the plate and save it as an image
+            plate = roi[y1:y2, x1:x2]
+            cv2.imwrite("./plates/plate_{}.jpg".format(count), plate)
+            count += 1
+            
     cv2.imshow("frame", frame)
     cv2.waitKey(1)
 
