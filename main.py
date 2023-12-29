@@ -9,7 +9,7 @@ print(os.listdir())
 
 # load model
 car_detector = YOLO("model/yolov8n.pt")
-plate_detector = YOLO("model/license_plate_detector.pt")
+plate_detector = YOLO("model/vn-large/best.pt")
 
 vehicle_tracker = Tracker()
 
@@ -64,26 +64,22 @@ while ret:
         detections_plate_ = []
 
         for index, detection in px_.iterrows():
-            x1 = int(detection[0])
-            y1 = int(detection[1])
-            x2 = int(detection[2])
-            y2 = int(detection[3])
+            x3 = int(detection[0])
+            y3 = int(detection[1])
+            x4 = int(detection[2])
+            y4 = int(detection[3])
             confidence = float(detection[4])
             class_id = int(detection[5])
             if int(class_id) == 0:
-                detections_plate_.append([x1, y1, x2, y2])
+                detections_plate_.append([x3, y3, x4, y4])
 
         for detection in detections_plate_:
-            x1 = int(detection[0])
-            y1 = int(detection[1])
-            x2 = int(detection[2])
-            y2 = int(detection[3])
-            cv2.rectangle(roi, (x1, y1), (x2, y2), (0, 0, 255), 2)
-            cv2.putText(roi, str(class_id), (x1, y1), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 1)
-            # cut the plate and save it as an image
-            plate = roi[y1:y2, x1:x2]
-            cv2.imwrite("./plates/plate_{}.jpg".format(count), plate)
-            count += 1
+            x3 = int(detection[0])
+            y3 = int(detection[1])
+            x4 = int(detection[2])
+            y4 = int(detection[3])
+            cv2.rectangle(roi, (x3, y3), (x4, y4), (0, 0, 255), 2)
+            cv2.putText(roi, str(class_id), (x3, y3), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 1)
             
     cv2.imshow("frame", frame)
     cv2.waitKey(1)
