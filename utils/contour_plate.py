@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import imutils
+from utils.check_contour import check_contour
 
 def get_plate_bila(plate, sigma_color, sigma_space):
     screen = None
@@ -25,11 +26,10 @@ def get_plate_bila(plate, sigma_color, sigma_space):
                 break
 
         mask = np.zeros(plate_gray.shape, np.uint8)
+        return screen
     
     except:
         pass
-    
-    return screen
 
 def get_plate_gaus(plate):
     screen = None
@@ -52,8 +52,7 @@ def get_plate_gaus(plate):
                 break
 
         mask = np.zeros(plate_gray.shape, np.uint8)
+        return screen
     
     except:
-        pass
-    
-    return screen
+        return None

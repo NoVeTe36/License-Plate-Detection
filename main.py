@@ -4,7 +4,7 @@ import numpy as np
 import os
 from tracker import Tracker
 import pandas as pd
-from utils.contour_plate import *
+from utils.get_exact import *
 
 print(os.listdir())
 
@@ -14,7 +14,6 @@ plate_detector = YOLO("model/vn-large-8m/best.pt")
 
 vehicle_tracker = Tracker()
 
-# load video 1 frame per 2 seconds
 cap = cv2.VideoCapture("./videos/sample.mp4")
 
 # using YOLO we have to define the classes we want to detect
@@ -23,16 +22,14 @@ cap = cv2.VideoCapture("./videos/sample.mp4")
 
 count = 0
 
-# read video 1 frame per second
-
 frame_nmr = -1
 ret = True
 while ret:
     if not ret:
         break
     frame_nmr += 1
-    # if frame_nmr % 50 == 0:
-    #     continue
+    if frame_nmr % 50 == 0:
+        continue
     ret, frame = cap.read()
     detections = car_detector.predict(frame)
     a = detections[0].boxes.data
@@ -79,26 +76,25 @@ while ret:
             y5 = int(detection[1])
             x6 = int(detection[2])
             y6 = int(detection[3])
+
+            x5 = x5 - 2
+            y5 = y5 - 2
+            x6 = x6 + 2
+            y6 = y6 + 2
             # cv2.putText(roi, str(class_id), (x3, y5), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 1)
 
             roi_plate = roi_car[int(y5):int(y6), int(x5):int(x6)]
-            
-            # plate = get_plate_gaus(roi_plate)
 
-            # if plate is not None:
-            #     cv2.drawContours(roi_plate, [plate], -1, (0, 255, 0), 3)
-            # else:
-            #     plate = get_plate_bila(roi_plate, 13, 15)
-            #     if plate is not None:
-            #         cv2.drawContours(roi_plate, [plate], -1, (0, 255, 0), 3)
-            #     else:
-            #         plate = get_plate_bila(roi_plate, 5, 250)
-            #         if plate is not None:
-            #             cv2.drawContours(roi_plate, [plate], -1, (0, 255, 0), 3)
-            #         else:
-            #             cv2.rectangle(roi_plate, (x5, y5), (x6, y6), (0, 0, 255), 3)
+            plate = extract_plate(roi_plate)
 
-            cv2.rectangle(roi_car, (x5, y5), (x6, y6), (0, 0, 255), 3)            
+            if plate is not None and check_contour(plate):
+                with open("coordinate.txt", "a") as f:
+                    f.write(str(plate) + "\n")
+
+                # save the roi_plate
+                cv2.imwrite("./images/roi_1.jpg", roi_plate)
+
+            cv2.rectangle(roi_plate, (x5, y5), (x6, y6), (0, 0, 255), 3)            
             
     cv2.imshow("frame", frame)
     cv2.waitKey(1)
