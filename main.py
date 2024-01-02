@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 import os
-from tracker import Tracker
+from utils.tracker import Tracker
 import pandas as pd
 from utils.get_exact import *
 from utils.warp_perspective import *
@@ -88,8 +88,11 @@ while ret:
 
             plate = extract_plate(roi_plate)
 
+            cv2.rectangle(roi_car, (x5, y5), (x6, y6), (255, 0, 0), 3)
+
             if plate is not None and check_contour(plate):
                 warped = warpPerspective(roi_plate, plate)
+                cv2.imshow("warped", warped)
                 
                 # apply OCR here
             

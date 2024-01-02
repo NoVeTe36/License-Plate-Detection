@@ -64,5 +64,5 @@ def extract_plate(roi_plate):
                 else:
                     # if no contour is found, take the corners of the roi_plate as the corners of the plate
                     plate = np.array([[0, 0], [roi_plate.shape[1], 0], [roi_plate.shape[1], roi_plate.shape[0]], [0, roi_plate.shape[0]]])
-    cv2.rectangle(roi_plate, (0, 0), (roi_plate.shape[1], roi_plate.shape[0]), (0, 0, 255), 3)
+    
     return plate
