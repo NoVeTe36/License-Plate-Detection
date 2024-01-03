@@ -6,6 +6,12 @@ from utils.tracker import Tracker
 import pandas as pd
 from utils.get_exact import *
 from utils.warp_perspective import *
+from time import sleep
+import torch
+from CharModel import CharModel
+from utils.predict_ensemble import predict_chars_ensemble
+from utils.translate import to_chars
+from utils.char_extract import char_extract
 
 print(os.listdir())
 
@@ -15,11 +21,18 @@ plate_detector = YOLO("model/vn-large-8m/best.pt")
 
 vehicle_tracker = Tracker()
 
-cap = cv2.VideoCapture("./videos/sample.mp4")
+cap = cv2.VideoCapture("./videos/CarPlate_Record_1.mp4")
 
 # using YOLO we have to define the classes we want to detect
 # here, firstly, we have to detect cars, trucks or buses
 # vehicle = [2, 5, 7]    
+saved = torch.load("model/thresh_states.pt", map_location=torch.device("cpu"))
+char_models = []
+for s in saved:
+    m = CharModel()
+    m.load_state_dict(s["model"])
+    m.eval()
+    char_models.append(m)
 
 count = 0
 
@@ -32,7 +45,7 @@ while ret:
     if frame_nmr % 50 == 0:
         continue
     ret, frame = cap.read()
-    detections = car_detector.predict(frame)
+    detections = car_detector.predict(frame, verbose=False)
     a = detections[0].boxes.data
     px = pd.DataFrame(a.cpu().numpy())
     detections_ = []
@@ -57,7 +70,7 @@ while ret:
 
         roi_car = frame[int(y3):int(y4), int(x3):int(x4)]
 
-        detections_plate = plate_detector.predict(roi_car)
+        detections_plate = plate_detector.predict(roi_car, verbose=False)
         b = detections_plate[0].boxes.data
         px_ = pd.DataFrame(b.cpu().numpy())
         detections_plate_ = []
@@ -92,9 +105,12 @@ while ret:
 
             if plate is not None and check_contour(plate):
                 warped = warpPerspective(roi_plate, plate)
-                cv2.imshow("warped", warped)
-                
                 # apply OCR here
+                chars = char_extract(warped)
+                if chars is None:
+                    continue
+                out = predict_chars_ensemble(char_models, chars)    
+                print(to_chars(out))
             
     cv2.imshow("frame", frame)
     cv2.waitKey(1)
